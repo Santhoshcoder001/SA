@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ml-q1",
+    "language": "malayalam",
+    "questionText": "വീട് ഇതിന്റെ ഇംഗ്ലീഷ് അർത്ഥം എന്താണ്? (What is the English meaning of Veedu?)",
+    "options": ["House", "Tree", "Fruit", "Ball"],
+    "correctAnswer": "House",
+    "difficulty": "easy",
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "ml-q2",
+    "language": "malayalam",
+    "questionText": "പഴം ഇതിന്റെ ഇംഗ്ലീഷ് പേര് എന്താണ്? (What is the English name of Pazham?)",
+    "options": ["Fruit", "Water", "Sky", "Leaf"],
+    "correctAnswer": "Fruit",
+    "difficulty": "easy",
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  }
+]

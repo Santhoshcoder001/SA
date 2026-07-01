@@ -1,0 +1,44 @@
+[
+  {
+    "id": "english",
+    "name": "English",
+    "flag": "🇺🇸",
+    "isDefault": true,
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "tamil",
+    "name": "Tamil (தமிழ்)",
+    "flag": "🇮🇳",
+    "isDefault": true,
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "hindi",
+    "name": "Hindi (हिन्दी)",
+    "flag": "🇮🇳",
+    "isDefault": true,
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "telugu",
+    "name": "Telugu (తెలుగు)",
+    "flag": "🇮🇳",
+    "isDefault": true,
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "kannada",
+    "name": "Kannada (ಕನ್ನಡ)",
+    "flag": "🇮🇳",
+    "isDefault": true,
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "malayalam",
+    "name": "Malayalam (മലയാളം)",
+    "flag": "🇮🇳",
+    "isDefault": true,
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  }
+]

@@ -1,0 +1,32 @@
+[
+  {
+    "id": "ml-a1",
+    "language": "malayalam",
+    "subject": "alphabet",
+    "category": "Letters",
+    "word": "അ",
+    "meaning": "Amma (Mother)",
+    "pronunciation": "a",
+    "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=200",
+    "audio": "",
+    "difficulty": "easy",
+    "tags": ["letter", "vowel"],
+    "createdAt": "2026-07-01T00:00:00.000Z",
+    "updatedAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "ml-a2",
+    "language": "malayalam",
+    "subject": "alphabet",
+    "category": "Letters",
+    "word": "ആ",
+    "meaning": "Aana (Elephant)",
+    "pronunciation": "aa",
+    "image": "https://images.unsplash.com/photo-1557050543-4d5f4e07ef46?w=200",
+    "audio": "",
+    "difficulty": "easy",
+    "tags": ["letter", "vowel"],
+    "createdAt": "2026-07-01T00:00:00.000Z",
+    "updatedAt": "2026-07-01T00:00:00.000Z"
+  }
+]

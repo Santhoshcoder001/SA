@@ -1,0 +1,20 @@
+[
+  {
+    "id": "kn-q1",
+    "language": "kannada",
+    "questionText": "ಮನೆ ಇದರ ಇಂಗ್ಲಿಷ್ ಅರ್ಥವೇನು? (What is the English meaning of Mane?)",
+    "options": ["House", "Tree", "Fruit", "Ball"],
+    "correctAnswer": "House",
+    "difficulty": "easy",
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "kn-q2",
+    "language": "kannada",
+    "questionText": "ಹಣ್ಣು ಇದರ ಇಂಗ್ಲಿಷ್ ಹೆಸರೇನು? (What is the English name of Hannu?)",
+    "options": ["Fruit", "Water", "Sky", "Leaf"],
+    "correctAnswer": "Fruit",
+    "difficulty": "easy",
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  }
+]

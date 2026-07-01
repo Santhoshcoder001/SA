@@ -1,0 +1,20 @@
+[
+  {
+    "id": "ta-q1",
+    "language": "tamil",
+    "questionText": "அம்மா என்பதன் ஆங்கில பொருள் என்ன? (What is the English meaning of Amma?)",
+    "options": ["Father", "Mother", "Sister", "Brother"],
+    "correctAnswer": "Mother",
+    "difficulty": "easy",
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "ta-q2",
+    "language": "tamil",
+    "questionText": "மரத்தின் ஆங்கில பெயர் என்ன? (What is the English name of Maram?)",
+    "options": ["Leaf", "Fruit", "Tree", "Flower"],
+    "correctAnswer": "Tree",
+    "difficulty": "easy",
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  }
+]

@@ -1,0 +1,56 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 transition-colors duration-200 font-sans antialiased overflow-x-hidden;
+  }
+  
+  body.dark {
+    @apply bg-slate-950 text-slate-50;
+  }
+}
+
+@layer components {
+  /* Premium Glassmorphism Styles */
+  .glass-panel {
+    @apply bg-white/80 backdrop-blur-lg border border-white/20 shadow-glass-light dark:bg-slate-900/70 dark:border-slate-800/50 dark:shadow-glass-dark;
+  }
+
+  .glass-card {
+    @apply bg-white/40 backdrop-blur-md border border-white/10 shadow-sm dark:bg-slate-800/20 dark:border-slate-800/20;
+  }
+
+  .btn-primary {
+    @apply px-5 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-medium shadow-md shadow-brand-500/20 transition-all duration-200 active:scale-95 disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2;
+  }
+
+  .btn-secondary {
+    @apply px-5 py-2.5 rounded-xl bg-white hover:bg-slate-100 dark:bg-slate-900 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 font-medium border border-slate-200 dark:border-slate-800 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2;
+  }
+  
+  .btn-success {
+    @apply px-5 py-2.5 rounded-xl bg-success-600 hover:bg-success-700 text-white font-medium shadow-md shadow-success-500/20 transition-all duration-200 active:scale-95 flex items-center justify-center gap-2;
+  }
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-200 dark:bg-slate-800 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-300 dark:bg-slate-700;
+}

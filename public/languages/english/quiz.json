@@ -1,0 +1,29 @@
+[
+  {
+    "id": "en-q1",
+    "language": "english",
+    "questionText": "Which animal has a trunk?",
+    "options": ["Cat", "Dog", "Elephant", "Tiger"],
+    "correctAnswer": "Elephant",
+    "difficulty": "easy",
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "en-q2",
+    "language": "english",
+    "questionText": "What color is a ripe banana?",
+    "options": ["Red", "Yellow", "Purple", "Blue"],
+    "correctAnswer": "Yellow",
+    "difficulty": "easy",
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "en-q3",
+    "language": "english",
+    "questionText": "Identify the word: D _ G",
+    "options": ["O", "E", "A", "I"],
+    "correctAnswer": "O",
+    "difficulty": "easy",
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  }
+]

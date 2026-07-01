@@ -1,0 +1,47 @@
+[
+  {
+    "id": "kn-w-mane",
+    "language": "kannada",
+    "subject": "words",
+    "category": "Home",
+    "word": "ಮನೆ",
+    "meaning": "House",
+    "pronunciation": "mane",
+    "image": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=200",
+    "audio": "",
+    "difficulty": "easy",
+    "tags": ["home"],
+    "createdAt": "2026-07-01T00:00:00.000Z",
+    "updatedAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "kn-w-hannu",
+    "language": "kannada",
+    "subject": "words",
+    "category": "Fruits",
+    "word": "ಹಣ್ಣು",
+    "meaning": "Fruit",
+    "pronunciation": "hannu",
+    "image": "https://images.unsplash.com/photo-1610832958506-c5697d4f0d7b?w=200",
+    "audio": "",
+    "difficulty": "easy",
+    "tags": ["fruit", "food"],
+    "createdAt": "2026-07-01T00:00:00.000Z",
+    "updatedAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "kn-w-amma",
+    "language": "kannada",
+    "subject": "words",
+    "category": "Family",
+    "word": "ಅಮ್ಮ",
+    "meaning": "Mother",
+    "pronunciation": "amma",
+    "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=200",
+    "audio": "",
+    "difficulty": "easy",
+    "tags": ["family"],
+    "createdAt": "2026-07-01T00:00:00.000Z",
+    "updatedAt": "2026-07-01T00:00:00.000Z"
+  }
+]

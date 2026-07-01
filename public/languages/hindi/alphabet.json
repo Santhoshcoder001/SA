@@ -1,0 +1,32 @@
+[
+  {
+    "id": "hi-a1",
+    "language": "hindi",
+    "subject": "alphabet",
+    "category": "Letters",
+    "word": "अ",
+    "meaning": "Anar (Pomegranate)",
+    "pronunciation": "a",
+    "image": "https://images.unsplash.com/photo-1601275868399-45bec4f4cd9d?w=200",
+    "audio": "",
+    "difficulty": "easy",
+    "tags": ["letter", "vowel"],
+    "createdAt": "2026-07-01T00:00:00.000Z",
+    "updatedAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "hi-a2",
+    "language": "hindi",
+    "subject": "alphabet",
+    "category": "Letters",
+    "word": "आ",
+    "meaning": "Aam (Mango)",
+    "pronunciation": "aa",
+    "image": "https://images.unsplash.com/photo-1553279768-865429fa0078?w=200",
+    "audio": "",
+    "difficulty": "easy",
+    "tags": ["letter", "vowel"],
+    "createdAt": "2026-07-01T00:00:00.000Z",
+    "updatedAt": "2026-07-01T00:00:00.000Z"
+  }
+]

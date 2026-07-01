@@ -1,0 +1,47 @@
+[
+  {
+    "id": "ta-a1",
+    "language": "tamil",
+    "subject": "alphabet",
+    "category": "Letters",
+    "word": "அ",
+    "meaning": "Amma (Mother)",
+    "pronunciation": "a",
+    "image": "https://images.unsplash.com/photo-1544025162-d76694265947?w=200",
+    "audio": "",
+    "difficulty": "easy",
+    "tags": ["letter", "vowel"],
+    "createdAt": "2026-07-01T00:00:00.000Z",
+    "updatedAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "ta-a2",
+    "language": "tamil",
+    "subject": "alphabet",
+    "category": "Letters",
+    "word": "ஆ",
+    "meaning": "Aadu (Goat)",
+    "pronunciation": "aa",
+    "image": "https://images.unsplash.com/photo-1524413840807-0c3cb6fa808d?w=200",
+    "audio": "",
+    "difficulty": "easy",
+    "tags": ["letter", "vowel"],
+    "createdAt": "2026-07-01T00:00:00.000Z",
+    "updatedAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "ta-a3",
+    "language": "tamil",
+    "subject": "alphabet",
+    "category": "Letters",
+    "word": "இ",
+    "meaning": "Ilai (Leaf)",
+    "pronunciation": "i",
+    "image": "https://images.unsplash.com/photo-1502082553048-f009c37129b9?w=200",
+    "audio": "",
+    "difficulty": "easy",
+    "tags": ["letter", "vowel"],
+    "createdAt": "2026-07-01T00:00:00.000Z",
+    "updatedAt": "2026-07-01T00:00:00.000Z"
+  }
+]

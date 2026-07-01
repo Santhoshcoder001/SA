@@ -1,0 +1,20 @@
+[
+  {
+    "id": "te-q1",
+    "language": "telugu",
+    "questionText": "ఇల్లు యొక్క ఆంగ్ల అర్థం ఏమిటి? (What is the English meaning of Illu?)",
+    "options": ["House", "Tree", "Fruit", "Dog"],
+    "correctAnswer": "House",
+    "difficulty": "easy",
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  },
+  {
+    "id": "te-q2",
+    "language": "telugu",
+    "questionText": "పండు యొక్క ఆంగ్ల పేరు ఏమిటి? (What is the English name of Pandu?)",
+    "options": ["Fruit", "Water", "Leaf", "Sun"],
+    "correctAnswer": "Fruit",
+    "difficulty": "easy",
+    "createdAt": "2026-07-01T00:00:00.000Z"
+  }
+]

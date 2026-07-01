@@ -1,0 +1,82 @@
+[
+  {
+    "id": "alphabet",
+    "name": "Alphabet",
+    "icon": "A",
+    "description": "Learn letters, pronunciation, and examples.",
+    "path": "/subject/alphabet",
+    "order": 1
+  },
+  {
+    "id": "words",
+    "name": "Word Learning",
+    "icon": "Book",
+    "description": "Expand your vocabulary with picture definitions.",
+    "path": "/subject/words",
+    "order": 2
+  },
+  {
+    "id": "letter-arrangement",
+    "name": "Letter Arrangement",
+    "icon": "Move",
+    "description": "Drag scrambled letters into the correct order.",
+    "path": "/subject/letter-arrangement",
+    "order": 3
+  },
+  {
+    "id": "missing-letter",
+    "name": "Missing Letter",
+    "icon": "HelpCircle",
+    "description": "Fill in the blank to spell the word correctly.",
+    "path": "/subject/missing-letter",
+    "order": 4
+  },
+  {
+    "id": "picture-id",
+    "name": "Picture Identification",
+    "icon": "Image",
+    "description": "Look at the picture and tap the matching word.",
+    "path": "/subject/picture-id",
+    "order": 5
+  },
+  {
+    "id": "listening",
+    "name": "Listening Activity",
+    "icon": "Volume2",
+    "description": "Listen to the word and tap the correct spelling.",
+    "path": "/subject/listening",
+    "order": 6
+  },
+  {
+    "id": "flashcards",
+    "name": "Flash Cards",
+    "icon": "CreditCard",
+    "description": "Tap cards to flip and review words.",
+    "path": "/subject/flashcards",
+    "order": 7
+  },
+  {
+    "id": "matching",
+    "name": "Matching Game",
+    "icon": "Grid",
+    "description": "Match pictures, letters, and words together.",
+    "path": "/subject/matching",
+    "order": 8
+  },
+  {
+    "id": "memory",
+    "name": "Memory Game",
+    "icon": "Sparkles",
+    "description": "Flip cards and find pairs of identical images/words.",
+    "path": "/subject/memory",
+    "order": 9
+  },
+  {
+    "id": "quiz",
+    "name": "Quiz Mode",
+    "icon": "Trophy",
+    "description": "Earn points and stars in a random test.",
+    "path": "/subject/quiz",
+    "order": 10
+  }
+]
