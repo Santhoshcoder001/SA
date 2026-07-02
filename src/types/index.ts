@@ -87,8 +87,8 @@ export interface Settings {
   ttsSpeed: number; // Speech rate (0.5 to 2.0)
   pitch: number; // Speech pitch (0.5 to 2.0)
   volume: number; // Speech volume (0.0 to 1.0)
-  ttsProvider: 'browser' | 'elevenlabs';
-  elevenLabsVoiceId: string;
+  ttsProvider: 'browser' | 'gemini' | 'elevenlabs';
+  geminiVoiceName: string;
   darkMode: boolean;
   theme: 'light' | 'dark' | 'system';
 }

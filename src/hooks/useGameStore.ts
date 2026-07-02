@@ -53,8 +53,8 @@ const DEFAULT_SETTINGS: Settings = {
   ttsSpeed: 0.8,
   pitch: 1.0,
   volume: 1.0,
-  ttsProvider: 'browser',
-  elevenLabsVoiceId: '21m00Tcm4TlvDq8ikWAM',
+  ttsProvider: 'gemini',
+  geminiVoiceName: 'Kore',
   darkMode: false,
   theme: 'light'
 };
@@ -365,6 +365,17 @@ export const useGameStore = create<GameStoreState>()(
     }),
     {
       name: 'kids-learning-platform-state',
+      merge: (persistedState, currentState) => {
+        const typedPersisted = (persistedState as Partial<GameStoreState>) || {};
+        return {
+          ...currentState,
+          ...typedPersisted,
+          settings: {
+            ...currentState.settings,
+            ...(typedPersisted.settings || {})
+          }
+        };
+      },
       partialize: (state) => ({
         progress: state.progress,
         settings: state.settings,

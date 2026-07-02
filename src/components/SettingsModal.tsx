@@ -10,7 +10,7 @@ interface SettingsModalProps {
 }
 
 export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
-  const { settings, updateSettings, resetProgress, exportProgress, importProgress, elevenLabsApiKeyExists, clearCache } = useGameState();
+  const { settings, updateSettings, resetProgress, exportProgress, importProgress, geminiApiKeyExists, clearCache } = useGameState();
   const [voices, setVoices] = useState<SpeechSynthesisVoice[]>([]);
   const [importText, setImportText] = useState('');
   const [copied, setCopied] = useState(false);
@@ -154,11 +154,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                         </label>
                         <select
                           value={settings.ttsProvider}
-                          onChange={(e) => updateSettings({ ttsProvider: e.target.value as 'browser' | 'elevenlabs' })}
+                          onChange={(e) => updateSettings({ ttsProvider: e.target.value as 'browser' | 'gemini' })}
                           className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 shadow-sm focus:border-brand-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                         >
                           <option value="browser">கணினி ஒலி (Free Browser TTS)</option>
-                          <option value="elevenlabs">ElevenLabs Premium (Multilingual)</option>
+                          <option value="gemini">Gemini TTS API (Multilingual)</option>
                         </select>
                       </div>
 
@@ -191,25 +191,25 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                           )}
                         </div>
                       ) : (
-                        /* ElevenLabs Custom Configuration */
+                        /* Gemini Custom Configuration */
                         <div className="space-y-3.5">
                           {/* Voice ID input */}
                           <div className="space-y-1.5">
                             <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                              ElevenLabs Voice ID
+                              Gemini Voice Name
                             </label>
                             <input
                               type="text"
-                              value={settings.elevenLabsVoiceId}
-                              onChange={(e) => updateSettings({ elevenLabsVoiceId: e.target.value.trim() })}
-                              placeholder="e.g. 21m00Tcm4TlvDq8ikWAM"
+                              value={settings.geminiVoiceName}
+                              onChange={(e) => updateSettings({ geminiVoiceName: e.target.value.trim() || 'Kore' })}
+                              placeholder="e.g. Kore"
                               className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs text-slate-800 shadow-sm focus:border-brand-500 focus:outline-none dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
                             />
                           </div>
 
                           {/* API Key Status Indicator */}
                           <div className="text-[11px] leading-relaxed">
-                            {elevenLabsApiKeyExists ? (
+                            {geminiApiKeyExists ? (
                               <div className="flex items-center gap-1.5 text-success-600 dark:text-success-400 font-semibold">
                                 <span className="h-2 w-2 rounded-full bg-success-500"></span>
                                 API Key detected in root .env
@@ -217,7 +217,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose })
                             ) : (
                               <div className="flex items-start gap-1.5 text-rose-600 dark:text-rose-450 font-semibold">
                                 <span className="h-2 w-2 rounded-full bg-rose-500 mt-1 shrink-0"></span>
-                                <span>API Key not found. Please add <code>VITE_ELEVENLABS_API_KEY</code> to the <code>.env</code> file in your project root and restart the server.</span>
+                                <span>API Key not found. Please add <code>VITE_GEMINI_API_KEY</code> to the <code>.env</code> file in your project root and restart the server.</span>
                               </div>
                             )}
                           </div>

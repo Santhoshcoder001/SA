@@ -7,6 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node
 node_modules
 dist
 dist-ssr
@@ -22,6 +23,20 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db
 
 # Environment secrets
 .env
+.env.*
+!.env.example
+
+# Test reports and outputs
+coverage
+playwright-report
+test-results
+lighthouse-report.json
+
+# Python
+__pycache__
+*.pyc
+.venv

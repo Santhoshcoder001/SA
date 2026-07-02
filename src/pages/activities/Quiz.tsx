@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../../hooks/useGameStore';
 import { dbService } from '../../services/db';
@@ -109,6 +109,13 @@ export const Quiz: React.FC = () => {
     loadQuestions();
   }, [activeLanguageId, navigate]);
 
+  const handleTimeout = useCallback(() => {
+    // Treat as incorrect
+    setSelectedAnswer('');
+    setIsAnswerCorrect(false);
+    playErrorSound(settings.soundEnabled);
+  }, [settings.soundEnabled]);
+
   // Timer loop
   useEffect(() => {
     if (loading || isQuizOver || selectedAnswer !== null) return;
@@ -123,14 +130,9 @@ export const Quiz: React.FC = () => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [timeLeft, loading, isQuizOver, selectedAnswer]);
+  }, [timeLeft, loading, isQuizOver, selectedAnswer, handleTimeout]);
 
-  const handleTimeout = () => {
-    // Treat as incorrect
-    setSelectedAnswer('');
-    setIsAnswerCorrect(false);
-    playErrorSound(settings.soundEnabled);
-  };
+
 
   const handleAnswerClick = (option: string) => {
     if (selectedAnswer !== null) return;

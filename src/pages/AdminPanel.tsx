@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { useGameStore } from '../hooks/useGameStore';
 import { dbService } from '../services/db';
@@ -41,7 +41,7 @@ export const AdminPanel: React.FC = () => {
   const { register: regItem, handleSubmit: submitItem, reset: resetItem } = useForm<Omit<LearningItem, 'id' | 'createdAt' | 'updatedAt' | 'image' | 'audio'>>();
 
   // Load items based on filters
-  const fetchFilteredItems = async () => {
+  const fetchFilteredItems = useCallback(async () => {
     setLoadingItems(true);
     const lId = filterLang === 'all' ? undefined : filterLang;
     const sId = filterSubj === 'all' ? undefined : filterSubj;
@@ -57,11 +57,11 @@ export const AdminPanel: React.FC = () => {
 
     setItemsList(dbItems);
     setLoadingItems(false);
-  };
+  }, [filterLang, filterSubj, filterDiff, searchWord]);
 
   useEffect(() => {
     fetchFilteredItems();
-  }, [filterLang, filterSubj, filterDiff, searchWord]);
+  }, [fetchFilteredItems]);
 
   // Handle Add Language
   const onAddLanguage = async (data: Omit<Language, 'isDefault' | 'createdAt'>) => {

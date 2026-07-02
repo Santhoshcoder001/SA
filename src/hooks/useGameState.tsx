@@ -6,7 +6,8 @@ import { segmentTamilWord, shuffleLetters, isArrangementCorrect } from '../utils
 import { playSuccessSound, playErrorSound, playMilestoneSound, speakTamilWord, isSpeechSynthesisSupported, getTamilVoices, stopSpeaking } from '../utils/soundEffects';
 import confetti from 'canvas-confetti';
 import { getCachedAudio, cacheAudio, clearAudioCache } from '../services/AudioCache';
-import { speakTamilViaElevenLabs, hasElevenLabsApiKey } from '../services/ElevenLabsService';
+import { hasGeminiApiKey } from '../services/ElevenLabsService';
+import { speakTamilViaHf } from '../services/tamilTts';
 
 interface GameContextType extends GameState {
   selectWord: (wordId: string) => void;
@@ -31,12 +32,13 @@ interface GameContextType extends GameState {
   importProgress: (dataStr: string) => boolean;
   exportProgress: () => string;
   isSpeaking: boolean;
+  isGenerating: boolean;
   speakingText: string | null;
   stopSpeaking: () => void;
   speakWord: (word: string) => Promise<boolean>;
   hasTamilVoice: boolean;
   isTtsSupported: boolean;
-  elevenLabsApiKeyExists: boolean;
+  geminiApiKeyExists: boolean;
   clearCache: () => Promise<void>;
 }
 
@@ -49,8 +51,8 @@ const DEFAULT_SETTINGS: GameSettings = {
   ttsSpeed: 0.8,
   pitch: 1.0,
   volume: 1.0,
-  ttsProvider: 'browser',
-  elevenLabsVoiceId: '21m00Tcm4TlvDq8ikWAM',
+  ttsProvider: 'gemini',
+  geminiVoiceName: 'Kore',
   darkMode: false,
 };
 
@@ -94,7 +96,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const [settings, setSettings] = useState<GameSettings>(() => {
     const saved = localStorage.getItem('tamil-game-settings');
-    const parsed = saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+    const parsed = saved ? { ...DEFAULT_SETTINGS, ...JSON.parse(saved) } : DEFAULT_SETTINGS;
     
     // Apply dark mode immediately on boot
     if (parsed.darkMode) {
@@ -122,6 +124,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [error, setError] = useState<string | null>(null);
 
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [speakingText, setSpeakingText] = useState<string | null>(null);
   const speakingTextRef = useRef<string | null>(null);
 
@@ -625,10 +628,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     selectWord(ids[0]);
   };
 
-  // Ref for active ElevenLabs Audio element and Object URL
+  // Ref for active cloud TTS audio element and Object URL
   const activeAudioRef = useRef<HTMLAudioElement | null>(null);
   const activeAudioUrlRef = useRef<string | null>(null);
-  const elevenLabsApiKeyExists = hasElevenLabsApiKey();
+  const geminiApiKeyExists = hasGeminiApiKey();
 
   // Helper to trigger browser speech synthesis fallback
   const triggerBrowserVoice = async (wordText: string): Promise<boolean> => {
@@ -669,10 +672,9 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setIsSpeaking(true);
     setSpeakingText(wordText);
 
-    if (settings.ttsProvider === 'elevenlabs' && elevenLabsApiKeyExists) {
-      try {
-        // 1. Query Cache
-        let audioBlob = await getCachedAudio(wordText);
+    try {
+      // 1. Query Cache
+      let audioBlob = await getCachedAudio(wordText);
 
         // Check if canceled during async DB query
         if (speakingTextRef.current !== wordText) {
@@ -680,11 +682,14 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         }
 
         if (!audioBlob) {
+          setIsGenerating(true);
           // 2. Fetch from API
-          audioBlob = await speakTamilViaElevenLabs(wordText, settings.elevenLabsVoiceId);
+          // For now, assume all words here are Tamil since it's a Tamil game
+          audioBlob = await speakTamilViaHf(wordText);
           // 3. Cache Audio Blob
           await cacheAudio(wordText, audioBlob);
         }
+        setIsGenerating(false);
 
         // Check if canceled during API fetch
         if (speakingTextRef.current !== wordText) {
@@ -724,13 +729,10 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         audio.play();
         return true;
       } catch (err) {
-        console.error('ElevenLabs pronunciation failed, falling back to browser synthesis:', err);
+        setIsGenerating(false);
+        console.error('Cloud pronunciation failed, falling back to browser synthesis:', err);
         return triggerBrowserVoice(wordText);
       }
-    } else {
-      // Free Browser fallback
-      return triggerBrowserVoice(wordText);
-    }
   };
 
   // Pronounce active word text to speech
@@ -751,6 +753,7 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       activeAudioUrlRef.current = null;
     }
     setIsSpeaking(false);
+    setIsGenerating(false);
     setSpeakingText(null);
   };
 
@@ -862,12 +865,13 @@ export const GameProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       importProgress,
       exportProgress,
       isSpeaking,
+      isGenerating,
       speakingText,
       stopSpeaking: stopSpeakingText,
       speakWord,
       hasTamilVoice,
       isTtsSupported,
-      elevenLabsApiKeyExists,
+      geminiApiKeyExists,
       clearCache
     }}>
       {children}

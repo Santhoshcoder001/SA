@@ -252,11 +252,11 @@ export const KidsLayout: React.FC = () => {
                       <span className="text-xs text-slate-400">TTS Engine Provider</span>
                       <select
                         value={settings.ttsProvider}
-                        onChange={(e) => updateSettings({ ttsProvider: e.target.value as 'browser' | 'elevenlabs' })}
+                        onChange={(e) => updateSettings({ ttsProvider: e.target.value as 'browser' | 'gemini' })}
                         className="rounded-xl border border-slate-200 px-3 py-2 text-xs dark:bg-slate-800 dark:border-slate-800"
                       >
                         <option value="browser">Browser Native Speech</option>
-                        <option value="elevenlabs">ElevenLabs Multilingual API</option>
+                        <option value="gemini">Gemini TTS API</option>
                       </select>
                     </div>
 

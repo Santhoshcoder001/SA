@@ -1,5 +1,6 @@
-import { speakTamilViaElevenLabs, hasElevenLabsApiKey } from './ElevenLabsService';
+import { speakViaGeminiTts, hasGeminiApiKey } from './ElevenLabsService';
 import { getCachedAudio, cacheAudio } from './AudioCache';
+import { speakTamilViaHf } from './tamilTts';
 
 // Map language IDs to standard voice locale strings
 const LANG_LOCALE_MAP: Record<string, string> = {
@@ -14,10 +15,16 @@ const LANG_LOCALE_MAP: Record<string, string> = {
 export class SpeechService {
   private activeAudio: HTMLAudioElement | null = null;
   private isCurrentlySpeaking = false;
+  private isCurrentlyGenerating = false;
   private onStateChangeCallback: ((speaking: boolean) => void) | null = null;
+  private onGenerateStateChangeCallback: ((generating: boolean) => void) | null = null;
 
   registerStateChange(callback: (speaking: boolean) => void) {
     this.onStateChangeCallback = callback;
+  }
+
+  registerGenerateStateChange(callback: (generating: boolean) => void) {
+    this.onGenerateStateChangeCallback = callback;
   }
 
   private setSpeaking(state: boolean) {
@@ -27,20 +34,31 @@ export class SpeechService {
     }
   }
 
+  private setGenerating(state: boolean) {
+    this.isCurrentlyGenerating = state;
+    if (this.onGenerateStateChangeCallback) {
+      this.onGenerateStateChangeCallback(state);
+    }
+  }
+
   isSpeaking(): boolean {
     return this.isCurrentlySpeaking;
   }
 
+  isGenerating(): boolean {
+    return this.isCurrentlyGenerating;
+  }
+
   /**
-   * Main speech method that handles pre-recorded audio, ElevenLabs, or Web Speech API fallback.
+   * Main speech method that handles pre-recorded audio, Gemini, or Web Speech API fallback.
    */
   async speak(
     text: string,
     languageId: string,
     settings: {
       ttsEnabled: boolean;
-      ttsProvider: 'browser' | 'elevenlabs';
-      elevenLabsVoiceId: string;
+      ttsProvider: 'browser' | 'gemini' | 'elevenlabs';
+      geminiVoiceName: string;
       ttsSpeed: number;
       volume: number;
       pitch: number;
@@ -68,17 +86,28 @@ export class SpeechService {
       }
     }
 
-    // 2. ElevenLabs integration (for multilingual custom TTS)
-    const apiKeyExists = hasElevenLabsApiKey();
-    if (settings.ttsProvider === 'elevenlabs' && apiKeyExists) {
+    // 2. Cloud TTS integration (HF for Tamil, Gemini for others)
+    const isTamil = languageId === 'tamil';
+    const apiKeyExists = hasGeminiApiKey();
+    const cloudTtsEnabled = settings.ttsProvider === 'gemini' || settings.ttsProvider === 'elevenlabs';
+    
+    // We allow HF API to proceed even without Gemini API key, as it's our own free endpoint.
+    if (isTamil || (cloudTtsEnabled && apiKeyExists)) {
       try {
         // Query IndexedDB Audio Cache
         let audioBlob = await getCachedAudio(text);
 
         if (!audioBlob) {
-          audioBlob = await speakTamilViaElevenLabs(text, settings.elevenLabsVoiceId);
+          this.setGenerating(true); // Network request starting
+          if (isTamil) {
+            audioBlob = await speakTamilViaHf(text);
+          } else {
+            audioBlob = await speakViaGeminiTts(text, settings.geminiVoiceName);
+          }
           await cacheAudio(text, audioBlob);
         }
+        
+        this.setGenerating(false);
 
         const audioUrl = URL.createObjectURL(audioBlob);
         await this.playAudioSrc(audioUrl, settings.ttsSpeed, settings.volume, () => {
@@ -86,7 +115,8 @@ export class SpeechService {
         });
         return true;
       } catch (err) {
-        console.error('ElevenLabs failed, falling back to Browser SpeechSynthesis:', err);
+        this.setGenerating(false);
+        console.error('Cloud TTS failed, falling back to Browser SpeechSynthesis:', err);
       }
     }
 

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useGameStore } from '../hooks/useGameStore';
 import { speechService } from '../services/speechService';
-import { Volume2, VolumeX, Square } from 'lucide-react';
+import { Volume2, VolumeX, Square, Loader2 } from 'lucide-react';
 
 interface SpeechButtonProps {
   word: string;
@@ -18,6 +18,7 @@ export const SpeechButton: React.FC<SpeechButtonProps> = ({
 }) => {
   const { activeLanguageId, settings } = useGameStore();
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     // Monitor global speech state
@@ -29,16 +30,24 @@ export const SpeechButton: React.FC<SpeechButtonProps> = ({
         setIsSpeaking(false);
       }
     };
+    
+    const handleGenerateChange = (generating: boolean) => {
+      // We only know global generation state, so if it's generating, disable our button and show a spinner.
+      setIsGenerating(generating);
+    };
 
     speechService.registerStateChange(handleStateChange);
+    speechService.registerGenerateStateChange(handleGenerateChange);
+    
     return () => {
       speechService.registerStateChange(() => {});
+      speechService.registerGenerateStateChange(() => {});
     };
   }, [word]);
 
   const handleClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!word) return;
+    if (!word || isGenerating) return;
 
     if (isSpeaking) {
       speechService.stop();
@@ -57,6 +66,8 @@ export const SpeechButton: React.FC<SpeechButtonProps> = ({
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
       e.stopPropagation();
+      if (!word || isGenerating) return;
+
       if (isSpeaking) {
         speechService.stop();
         setIsSpeaking(false);
@@ -88,14 +99,21 @@ export const SpeechButton: React.FC<SpeechButtonProps> = ({
       onClick={handleClick}
       onKeyDown={handleKeyDown}
       tabIndex={0}
-      aria-label={isSpeaking ? `Stop speaking ${word}` : `Pronounce ${word}`}
-      className={`relative inline-flex items-center justify-center rounded-xl p-2.5 transition-all outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 cursor-pointer ${
-        isSpeaking 
-          ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200/40' 
-          : 'bg-white dark:bg-slate-900 border border-slate-200/40 dark:border-slate-800/40'
+      disabled={isGenerating}
+      aria-label={isGenerating ? `Generating pronunciation for ${word}` : isSpeaking ? `Stop speaking ${word}` : `Pronounce ${word}`}
+      className={`relative inline-flex items-center justify-center rounded-xl p-2.5 transition-all outline-none focus-visible:ring-2 focus-visible:ring-sky-500 focus-visible:ring-offset-2 text-slate-600 dark:text-slate-300 ${
+        isGenerating
+          ? 'cursor-wait opacity-70 bg-slate-100 dark:bg-slate-800 border border-slate-200/40 dark:border-slate-700/40'
+          : 'hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer'
+      } ${
+        isSpeaking && !isGenerating
+          ? 'bg-sky-50 dark:bg-sky-950/40 text-sky-600 dark:text-sky-400 border border-sky-200/40'
+          : (!isGenerating ? 'bg-white dark:bg-slate-900 border border-slate-200/40 dark:border-slate-800/40' : '')
       } ${className}`}
     >
-      {isSpeaking ? (
+      {isGenerating ? (
+        <Loader2 size={size} className="shrink-0 animate-spin text-sky-500" />
+      ) : isSpeaking ? (
         <div className="relative flex items-center justify-center">
           <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-sky-400 opacity-30"></span>
           <Square size={size} className="fill-current text-sky-500 shrink-0" />

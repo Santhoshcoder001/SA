@@ -34,8 +34,8 @@ export interface GameSettings {
   ttsSpeed: number; // Speech rate (0.5 to 2.0)
   pitch: number; // Speech pitch (0.5 to 2.0)
   volume: number; // Speech volume (0.0 to 1.0)
-  ttsProvider: 'browser' | 'elevenlabs'; // Speech service provider
-  elevenLabsVoiceId: string; // ElevenLabs voice identifier
+  ttsProvider: 'browser' | 'gemini' | 'elevenlabs'; // Speech service provider
+  geminiVoiceName: string; // Gemini voice name
   darkMode: boolean;
 }
 

@@ -1,381 +1,163 @@
-# 🌟 Kids Learning Platform
+<div align="center">
+  <h1>🌟 Kids Learning Platform 🌟</h1>
+  <p><strong>A modern AI-powered multilingual educational platform for children</strong></p>
+</div>
 
-A modern, responsive, and interactive **multi-language educational platform** designed for children (ages 3–10) to learn alphabets, words, spelling, pronunciation, and vocabulary through engaging game-based activities.
+<br />
 
-The platform supports multiple languages, dynamic content import, speech pronunciation, and gamified learning while providing a clean and intuitive interface for children.
+## 📖 About the Project
+
+The Kids Learning Platform is an interactive, mobile-first web application designed to teach children alphabets, words, spelling, pronunciation, listening, and vocabulary through engaging mini-games.
+
+The platform supports dynamic multi-language content (including offline support), document importing, Gamification (XP, Stars, Coins, Streak), and **native Tamil AI Text-to-Speech** via Hugging Face.
 
 ---
 
 ## ✨ Features
 
-### 🌍 Multi-Language Support
-
-- English
-- Tamil
-- Hindi
-- Telugu
-- Kannada
-- Malayalam
-
-The application interface remains in English while learning content changes according to the selected language.
-
----
-
-## 📚 Learning Activities
-
-- 🔤 Alphabet Learning
-- 📖 Word Learning
-- 🧩 Letter Arrangement
-- ✍ Missing Letter
-- 🖼 Picture Identification
-- 🎧 Listening Activity
-- 🃏 Flash Cards
-- 🔗 Matching Game
-- 🧠 Memory Game
-- 📝 Quiz Mode
+- ✅ **Multi-language support** (English, Tamil, Hindi, Telugu, Kannada, Malayalam)
+- ✅ **Responsive UI** & **Mobile-first** architecture
+- ✅ **Admin panel** for content management
+- ✅ **DOCX import** for bulk vocabulary uploads
+- 🚧 **PDF import** (Future Roadmap)
+- ✅ **Tamil AI Text-to-Speech** (Zero-shot translation via Hugging Face Spaces)
+- ✅ **Hugging Face integration** (`facebook/mms-tts-tam`)
+- ✅ **IndexedDB audio caching** (Lightning-fast audio loading and offline resilience)
+- ✅ **Browser fallback** for TTS
+- ✅ **Offline support** (Progress and cached data works without internet)
+- ✅ **Gamification** (Levels, Coins, Stars, Certificates)
+- ✅ **Flashcards** & **Matching Games**
+- ✅ **Letter arrangement** & **Missing letter** exercises
+- ✅ **Interactive Quizzes**
+- ✅ **Listening activity**
+- ✅ **Progress tracking**
+- ✅ **Accessibility** (Screen-reader friendly `aria-labels`)
+- ✅ **PWA support** (Installable app)
 
 ---
 
-## 📄 Dynamic Word Import
+## 📸 Screenshots
 
-Teachers and administrators can upload Microsoft Word (.docx) files containing vocabulary.
+| Home Page | Word Explorer |
+| :---: | :---: |
+| ![Home](assets/screenshots/home.png) | ![Words](assets/screenshots/words.png) |
 
-Example:
+| Quiz Dashboard | Admin Panel |
+| :---: | :---: |
+| ![Quiz](assets/screenshots/quiz.png) | ![Admin](assets/screenshots/admin.png) |
 
-```text
-Apple
-Ball
-Cat
-Dog
-Elephant
-```
-
-or
-
-```text
-பழம்
-மரம்
-பூ
-வீடு
-```
-
-The application automatically:
-
-- Reads the document
-- Extracts words
-- Removes duplicates
-- Removes blank lines
-- Displays imported words
-- Makes them immediately available in all learning activities
+*(Note: Add screenshot files to `assets/screenshots/`)*
 
 ---
 
-## 🔊 Speech Support
+## 🏗️ Architecture
 
-Supports multiple pronunciation methods:
-
-- Browser Speech Synthesis
-- ElevenLabs Text-to-Speech
-- Pre-recorded audio files
-
-Speech architecture is modular and easily replaceable.
-
----
-
-## 🎮 Gamification
-
-- ⭐ Stars
-- 🪙 Coins
-- 🏆 Achievements
-- 📈 Progress Tracking
-- 🔥 Daily Streak
-- 🎖 Certificates
-- 🎉 Confetti Animations
-
----
-
-## 📱 Responsive Design
-
-Optimized for:
-
-- Android
-- iPhone
-- Tablet
-- Laptop
-- Desktop
-
-Touch-friendly and keyboard accessible.
-
----
-
-## 🛠 Admin Panel
-
-Features include:
-
-- Manage Languages
-- Manage Subjects
-- Upload Word Documents
-- Upload Images
-- Upload Audio
-- Edit Learning Items
-- Delete Learning Items
-- Import / Export Data
-- Search & Filter Content
-
----
-
-# 🏗 Technology Stack
-
-## Frontend
-
-- React
-- TypeScript
-- Vite
-- Tailwind CSS
-
-## Libraries
-
-- React Router
-- Zustand
-- React Hook Form
-- dnd-kit
-- Framer Motion
-
-## Storage
-
-- IndexedDB
-- Local Storage
-
-## Document Parsing
-
-- mammoth.js (DOCX)
-- PDF Parser
-
-## Speech
-
-- ElevenLabs API
-- Browser SpeechSynthesis API
-
----
-
-# 📂 Project Structure
-
-```
-src/
-
-├── assets/
-├── components/
-├── contexts/
-├── hooks/
-├── layouts/
-├── pages/
-│   ├── activities/
-│   └── admin/
-├── services/
-├── types/
-├── utils/
-
-public/
-
-├── languages/
-├── audio/
-├── images/
+```mermaid
+graph TD
+    A[React Website] -->|Trigger Play| B(Tamil TTS Service)
+    B -->|Cache Miss| C[Hugging Face Space]
+    C -->|FastAPI| D[facebook/mms-tts-tam]
+    D -->|WAV/MP3| C
+    C -->|Response Blob| B
+    B -->|IndexedDB Save| E(Generated Audio Plays)
 ```
 
 ---
 
-# 🚀 Installation
+## 💻 Technology Stack
 
-Clone the repository
+### **Frontend**
+- **Framework:** React 19 + TypeScript + Vite
+- **Styling:** TailwindCSS
+- **State Management:** Zustand (with persist middleware)
+- **Routing:** React Router v7
 
-```bash
-git clone https://github.com/USERNAME/REPOSITORY.git
-```
+### **Backend (Microservice)**
+- **Framework:** FastAPI (Python)
+- **Machine Learning:** Transformers, PyTorch
+- **Model:** `facebook/mms-tts-tam`
+- **Hosting:** Hugging Face Spaces
 
-Move into the project
-
-```bash
-cd REPOSITORY
-```
-
-Install dependencies
-
-```bash
-npm install
-```
-
-Start development server
-
-```bash
-npm run dev
-```
-
-Open
-
-```
-http://localhost:5173
-```
+### **Storage & Caching**
+- **Audio Cache:** IndexedDB (`idb`)
+- **State Persistence:** Local Storage
 
 ---
 
-# 📦 Production Build
+## 🚀 Installation & Setup
 
+### Local Development
+
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+2. **Run the local development server:**
+   ```bash
+   npm run dev
+   ```
+
+### Production Build
+
+Create an optimized production build:
 ```bash
 npm run build
 ```
 
-Preview production build
+---
 
-```bash
-npm run preview
+## 🌍 Deployment
+
+- **Frontend:** Deploys easily to [Vercel](https://vercel.com/) (using `vercel.json` for SPA routing).
+- **Backend:** Deployed securely on [Hugging Face Spaces](https://huggingface.co/spaces).
+
+---
+
+## 📂 Folder Structure
+
+```
+.
+├── src/
+│   ├── components/      # Reusable React components (SpeechButton, Navigation, etc.)
+│   ├── pages/           # Application views (Activities, Admin, LandingPage)
+│   ├── services/        # External integrations (IndexedDB, Tamil TTS, Gemini TTS)
+│   ├── hooks/           # Zustand store and custom React hooks
+│   └── types/           # TypeScript interfaces
+├── public/              # Static assets, default language configurations (JSON)
+├── tests/               # Playwright E2E testing scripts
+└── Tamil-TTS-API/       # FastAPI Backend for Tamil Voice Generation
 ```
 
 ---
 
-# 🌐 Deployment
+## 🗺️ Roadmap & Future Improvements
 
-The application is compatible with:
-
-- Vercel
-- Netlify
-- Firebase Hosting
-- GitHub Pages (with configuration)
+- [ ] Add generic PDF text extraction to the import tool.
+- [ ] Implement user accounts and cloud synchronization for cross-device progress tracking.
+- [ ] Expand native deep-learning TTS support to Hindi and Telugu.
 
 ---
 
-# 🔐 Environment Variables
+## 🤝 Contributing
 
-Create a `.env` file.
-
-Example
-
-```env
-VITE_ELEVENLABS_API_KEY=YOUR_API_KEY
-```
-
-Never commit API keys to GitHub.
+Contributions are always welcome! If you have suggestions or improvements, please fork the repository, make your changes, and open a Pull Request.
 
 ---
 
-# 📄 Supported File Formats
+## 📄 License
 
-Word Import
-
-- DOCX
-
-Future Support
-
-- PDF
+This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-# 🎯 Learning Workflow
+## 👤 Author
 
-```
-Choose Language
+**Santhosh**
+- GitHub: [@Santhoshcoder001](https://github.com/Santhoshcoder001)
 
-↓
+## 🙏 Acknowledgements
 
-Choose Subject
-
-↓
-
-Select Activity
-
-↓
-
-Play Learning Game
-
-↓
-
-Earn Rewards
-
-↓
-
-Track Progress
-
-↓
-
-Receive Certificate
-```
-
----
-
-# 📊 Features Overview
-
-| Feature | Status |
-|----------|--------|
-| Multi-Language | ✅ |
-| Responsive UI | ✅ |
-| Mobile Support | ✅ |
-| Letter Arrangement | ✅ |
-| Word Learning | ✅ |
-| Flash Cards | ✅ |
-| Listening Activity | ✅ |
-| Matching Game | ✅ |
-| Memory Game | ✅ |
-| Quiz | ✅ |
-| DOCX Import | ✅ |
-| Admin Panel | ✅ |
-| Speech Support | ✅ |
-| IndexedDB | ✅ |
-| Local Storage | ✅ |
-| PWA Ready | ✅ |
-
----
-
-# 🎨 UI Highlights
-
-- Child-Friendly Interface
-- Bright Color Palette
-- Smooth Animations
-- Responsive Cards
-- Touch Optimized
-- Accessible Navigation
-
----
-
-# 📈 Future Enhancements
-
-- User Authentication
-- Teacher Dashboard
-- Student Profiles
-- Cloud Database
-- Multiplayer Challenges
-- AI-Based Personalized Learning
-- Analytics Dashboard
-- Classroom Management
-- Leaderboards
-- Offline Content Sync
-
----
-
-# 🤝 Contributing
-
-Contributions are welcome.
-
-1. Fork the repository.
-2. Create a new branch.
-3. Commit your changes.
-4. Push the branch.
-5. Open a Pull Request.
-
----
-
-# 📜 License
-
-This project is licensed under the MIT License.
-
----
-
-# 👨‍💻 Author
-
-**Santhosh K. R.**
-
-GitHub: https://github.com/Santhoshcoder001
-
----
-
-## ⭐ Support
-
-If you find this project useful, consider giving it a ⭐ on GitHub.
+- DeepMind / Google for AI assistance toolsets.
+- Hugging Face for democratizing machine learning models.
+- Meta / Facebook for the `mms-tts-tam` language model.

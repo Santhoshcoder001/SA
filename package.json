@@ -1,7 +1,29 @@
 {
-  "name": "sa",
+  "name": "kids-learning-platform",
+  "version": "1.0.0",
+  "description": "A modern AI-powered multilingual educational platform for children that teaches alphabets, words, spelling, pronunciation, listening, and vocabulary through interactive games.",
+  "author": "Santhosh",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Santhoshcoder001/SA.git"
+  },
+  "keywords": [
+    "kids",
+    "learning",
+    "education",
+    "platform",
+    "tamil",
+    "tts",
+    "react",
+    "huggingface",
+    "pwa"
+  ],
+  "homepage": "https://github.com/Santhoshcoder001/SA#readme",
+  "bugs": {
+    "url": "https://github.com/Santhoshcoder001/SA/issues"
+  },
   "private": true,
-  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -25,12 +47,14 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.61.1",
     "@types/canvas-confetti": "^1.9.0",
     "@types/node": "^24.13.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
     "autoprefixer": "^10.5.2",
+    "lighthouse": "^13.4.0",
     "oxlint": "^1.71.0",
     "postcss": "^8.5.16",
     "tailwindcss": "^3.4.19",

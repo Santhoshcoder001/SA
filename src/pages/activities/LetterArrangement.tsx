@@ -61,32 +61,6 @@ export const LetterArrangement: React.FC = () => {
     }
   }, [items, currentIndex, activeLanguageId]);
 
-  if (loading) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-10 w-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
-    return (
-      <div className="max-w-md mx-auto text-center py-12 space-y-4">
-        <div className="text-6xl">📭</div>
-        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">No spelling words available</h3>
-        <p className="text-sm text-slate-500">
-          Add some vocabulary words in the Admin Panel first.
-        </p>
-        <button
-          onClick={() => navigate('/subjects')}
-          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-2xl shadow-md transition-all active:scale-95"
-        >
-          Back to Subjects
-        </button>
-      </div>
-    );
-  }
-
   const currentItem = items[currentIndex];
 
   const isSlotLockedByHint = (index: number): boolean => {
@@ -276,6 +250,32 @@ export const LetterArrangement: React.FC = () => {
       }
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="h-10 w-10 border-4 border-sky-500 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="max-w-md mx-auto text-center py-12 space-y-4">
+        <div className="text-6xl">📭</div>
+        <h3 className="text-xl font-bold text-slate-800 dark:text-slate-200">No spelling words available</h3>
+        <p className="text-sm text-slate-500">
+          Add some vocabulary words in the Admin Panel first.
+        </p>
+        <button
+          onClick={() => navigate('/subjects')}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-2xl shadow-md transition-all active:scale-95"
+        >
+          Back to Subjects
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 py-4">

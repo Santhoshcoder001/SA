@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../hooks/useGameStore';
 import { dbService } from '../services/db';
@@ -39,13 +39,13 @@ export const ImportWords: React.FC = () => {
   const [editValue, setEditValue] = useState('');
 
   // Load previously imported words for the current language on mount
-  const loadImportedWords = async () => {
+  const loadImportedWords = useCallback(async () => {
     if (!activeLanguageId) return;
     const items = await dbService.getLearningItems(activeLanguageId, 'words');
     // Filter items that belong to the "Imported" category
     const imported = items.filter(item => item.category === 'Imported');
     setImportedWords(imported);
-  };
+  }, [activeLanguageId]);
 
   useEffect(() => {
     if (!activeLanguageId) {
@@ -53,7 +53,7 @@ export const ImportWords: React.FC = () => {
       return;
     }
     loadImportedWords();
-  }, [activeLanguageId, navigate]);
+  }, [activeLanguageId, navigate, loadImportedWords]);
 
   // Drag and drop handlers
   const handleDrag = (e: React.DragEvent) => {
