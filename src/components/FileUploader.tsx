@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useGameState } from '../hooks/useGameState';
-import { parseDocxFile, parsePdfFile } from '../utils/fileParser';
+import { parseDocxFile, parsePdfFile, parseJsonFile } from '../utils/fileParser';
 import { UploadCloud, FileText, CheckCircle2, AlertCircle, Sparkles } from 'lucide-react';
 
 export const FileUploader: React.FC = () => {
@@ -19,26 +19,32 @@ export const FileUploader: React.FC = () => {
     setFileName(file.name);
 
     try {
-      let wordsExtracted: string[] = [];
       const extension = file.name.split('.').pop()?.toLowerCase();
+      let words: string[] = [];
 
       if (extension === 'docx') {
-        wordsExtracted = await parseDocxFile(file, 'tamil');
+        const result = await parseDocxFile(file, 'tamil');
+        words = result.words;
       } else if (extension === 'pdf') {
-        wordsExtracted = await parsePdfFile(file, 'tamil');
+        const result = await parsePdfFile(file, 'tamil');
+        words = result.words;
+      } else if (extension === 'json') {
+        const result = await parseJsonFile(file, 'tamil');
+        words = result.words;
       } else {
-        throw new Error('ஆவண வடிவம் ஆதரிக்கப்படவில்லை. Please upload a .docx or .pdf file.');
+        throw new Error('Unsupported format. Please upload a .docx, .pdf, or .json file.');
       }
 
-      if (wordsExtracted.length === 0) {
-        throw new Error('கோப்பிலிருந்து தமிழ் வார்த்தைகள் எதையும் கண்டறிய முடியவில்லை. No Tamil words found in the document.');
+      if (words.length === 0) {
+        throw new Error('No valid Tamil words found in the document. Check the file format.');
       }
 
-      uploadWords(wordsExtracted);
-      setSuccessCount(wordsExtracted.length);
-    } catch (err: any) {
+      uploadWords(words);
+      setSuccessCount(words.length);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Error occurred while parsing the file.';
       console.error(err);
-      setError(err.message || 'Error occurred while parsing the file.');
+      setError(msg);
     } finally {
       setLoading(false);
     }

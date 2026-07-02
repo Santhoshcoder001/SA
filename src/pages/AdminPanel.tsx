@@ -4,11 +4,12 @@ import { useGameStore } from '../hooks/useGameStore';
 import { dbService } from '../services/db';
 import type { Language, Subject, LearningItem, Difficulty } from '../types';
 import { segmentWord } from '../utils/wordSegmenter';
-import { parseDocxFile, parsePdfFile } from '../utils/fileParser';
+import { parseDocxFile, parsePdfFile, parseJsonFile } from '../utils/fileParser';
+import type { ParseResult } from '../utils/fileParser';
 import { playClickSound } from '../utils/soundEffects';
-import { 
-  Languages, Plus, Trash2, Download, FileText, 
-  Search, Save 
+import {
+  Languages, Plus, Trash2, Download, FileText,
+  Search, Save, BarChart3, RefreshCw, CheckCircle2, AlertCircle
 } from 'lucide-react';
 
 export const AdminPanel: React.FC = () => {
@@ -34,6 +35,24 @@ export const AdminPanel: React.FC = () => {
   const [bulkFile, setBulkFile] = useState<File | null>(null);
   const [bulkLang, setBulkLang] = useState<string>('');
   const [bulkParsing, setBulkParsing] = useState(false);
+  const [bulkImportMode, setBulkImportMode] = useState<'merge' | 'replace'>('merge');
+  const [lastImportStats, setLastImportStats] = useState<(ParseResult & { saved: number; langName: string }) | null>(null);
+
+  // Word count stats for header
+  const [wordCounts, setWordCounts] = useState<Record<string, number>>({});
+
+  const refreshWordCounts = useCallback(async () => {
+    const langs = ['english', 'tamil'];
+    const counts: Record<string, number> = {};
+    for (const l of langs) {
+      counts[l] = await dbService.getWordCount(l);
+    }
+    setWordCounts(counts);
+  }, []);
+
+  useEffect(() => {
+    refreshWordCounts();
+  }, [refreshWordCounts, itemsList]);
 
   // Forms
   const { register: regLang, handleSubmit: submitLang, reset: resetLang } = useForm<Omit<Language, 'isDefault' | 'createdAt'>>();
@@ -194,20 +213,32 @@ export const AdminPanel: React.FC = () => {
     }
     playClickSound(settings.soundEnabled);
     setBulkParsing(true);
+    setLastImportStats(null);
 
     try {
-      let words: string[] = [];
-      if (bulkFile.name.endsWith('.docx')) {
-        words = await parseDocxFile(bulkFile, bulkLang);
-      } else if (bulkFile.name.endsWith('.pdf')) {
-        words = await parsePdfFile(bulkFile, bulkLang);
+      let result: ParseResult;
+      const ext = bulkFile.name.split('.').pop()?.toLowerCase();
+      if (ext === 'docx') {
+        result = await parseDocxFile(bulkFile, bulkLang);
+      } else if (ext === 'pdf') {
+        result = await parsePdfFile(bulkFile, bulkLang);
+      } else if (ext === 'json') {
+        result = await parseJsonFile(bulkFile, bulkLang);
       } else {
-        alert('Supported formats are .docx or .pdf');
+        alert('Supported formats: .docx  .pdf  .json');
         setBulkParsing(false);
         return;
       }
 
+      const { words } = result;
+
+      // Replace mode: clear existing words for this language first
+      if (bulkImportMode === 'replace') {
+        await dbService.clearLearningItemsByLanguage(bulkLang);
+      }
+
       // Convert extracted words to learning items
+      const ts = Date.now();
       const itemsToSave: LearningItem[] = words.map((w, idx) => {
         const letters = segmentWord(w, bulkLang);
         let difficulty: Difficulty = 'easy';
@@ -215,12 +246,12 @@ export const AdminPanel: React.FC = () => {
         else if (letters.length >= 8) difficulty = 'hard';
 
         return {
-          id: `item-bulk-${Date.now()}-${idx}`,
+          id: `item-bulk-${ts}-${idx}`,
           language: bulkLang,
           subject: 'words',
-          category: 'Extracted',
+          category: 'Imported',
           word: w,
-          meaning: w.toLowerCase(), // default meaning
+          meaning: '',
           difficulty,
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()
@@ -230,11 +261,16 @@ export const AdminPanel: React.FC = () => {
       await dbService.bulkSaveLearningItems(itemsToSave);
       setBulkFile(null);
       setBulkParsing(false);
+
+      const langName = languages.find(l => l.id === bulkLang)?.name ?? bulkLang;
+      setLastImportStats({ ...result, saved: itemsToSave.length, langName });
+
       await fetchFilteredItems();
-      alert(`Success! Extracted and saved ${itemsToSave.length} words.`);
-    } catch (err: any) {
+      await refreshWordCounts();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
       console.error(err);
-      alert(`Parsing failed: ${err.message}`);
+      alert(`Parsing failed: ${msg}`);
       setBulkParsing(false);
     }
   };
@@ -295,15 +331,36 @@ export const AdminPanel: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Admin Title Banner */}
-      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl p-6 text-white shadow-lg flex items-center gap-4">
-        <div className="bg-white/20 p-4 rounded-2xl">
-          <Languages className="h-8 w-8" />
+      <div className="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-3xl p-6 text-white shadow-lg">
+        <div className="flex items-center gap-4 mb-4">
+          <div className="bg-white/20 p-4 rounded-2xl">
+            <Languages className="h-8 w-8" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-black">Content Management Dashboard</h2>
+            <p className="text-xs font-semibold text-purple-100">
+              Manage languages, subjects, bulk-import word datasets, and export your database.
+            </p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-2xl font-black">Content Management Dashboard</h2>
-          <p className="text-xs font-semibold text-purple-100">
-            Create, edit, delete languages, subjects, or upload custom audio & spelling items.
-          </p>
+        {/* Word Count Stats */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {languages.map(lang => (
+            <div key={lang.id} className="bg-white/15 rounded-2xl px-4 py-2.5 flex items-center gap-2">
+              <span className="text-xl">{lang.flag}</span>
+              <div>
+                <div className="text-xs font-bold text-purple-100">{lang.name.split(' ')[0]} Words</div>
+                <div className="text-lg font-black">{wordCounts[lang.id] ?? '–'}</div>
+              </div>
+            </div>
+          ))}
+          <div className="bg-white/15 rounded-2xl px-4 py-2.5 flex items-center gap-2">
+            <BarChart3 className="h-5 w-5" />
+            <div>
+              <div className="text-xs font-bold text-purple-100">Total Words</div>
+              <div className="text-lg font-black">{Object.values(wordCounts).reduce((a, b) => a + b, 0)}</div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -626,61 +683,127 @@ export const AdminPanel: React.FC = () => {
 
         {/* TAB 4: BULK TOOLS */}
         {activeTab === 'bulk' && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-xs font-semibold">
-            {/* Database backups */}
-            <div className="bg-slate-50/50 dark:bg-slate-950/20 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800 space-y-4">
-              <h3 className="text-sm font-black text-indigo-950 dark:text-white border-b pb-2 mb-2">
-                Database JSON Backup & Restore
-              </h3>
-              
-              <div className="space-y-3">
-                <p className="text-slate-500 text-[11px] leading-relaxed">
-                  Export the entire language learning deck (including images/audio) to a single JSON backup. You can import this file on another device.
-                </p>
+          <div className="space-y-6 text-xs font-semibold">
 
-                <button onClick={handleExportJson} className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 px-6 rounded-xl shadow-md flex items-center justify-center gap-1.5 w-full">
-                  <Download className="h-4.5 w-4.5" /> Export Database JSON
-                </button>
+            {/* Import Statistics Banner */}
+            {lastImportStats && (
+              <div className="bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-900 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-400 font-black text-sm">
+                  <CheckCircle2 className="h-5 w-5" />
+                  Import Successful — {lastImportStats.langName}
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {[
+                    { label: 'Words Saved', value: lastImportStats.saved, icon: '✅' },
+                    { label: 'Duplicates Removed', value: lastImportStats.duplicatesRemoved, icon: '🔁' },
+                    { label: 'Invalid Rows', value: lastImportStats.invalidRows, icon: '⚠️' },
+                    { label: 'Total Raw Lines', value: lastImportStats.totalRaw, icon: '📄' },
+                  ].map(stat => (
+                    <div key={stat.label} className="bg-white dark:bg-slate-900 rounded-xl p-3 text-center border border-emerald-100 dark:border-slate-800">
+                      <div className="text-lg">{stat.icon}</div>
+                      <div className="text-xl font-black text-slate-800 dark:text-white">{stat.value}</div>
+                      <div className="text-[10px] text-slate-500 font-bold mt-0.5">{stat.label}</div>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={() => setLastImportStats(null)} className="text-[10px] text-emerald-500 hover:underline">Dismiss</button>
+              </div>
+            )}
 
-                <div className="border-t border-slate-200 dark:border-slate-800 pt-4 space-y-2">
-                  <span className="block text-[11px] text-slate-500">Restore/Import Database JSON:</span>
-                  <input type="file" accept=".json" onChange={handleImportJson} className="text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-sky-50 file:text-sky-700 w-full" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {/* Database backups */}
+              <div className="bg-slate-50/50 dark:bg-slate-950/20 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800 space-y-4">
+                <h3 className="text-sm font-black text-indigo-950 dark:text-white border-b pb-2 mb-2">
+                  Database JSON Backup &amp; Restore
+                </h3>
+
+                <div className="space-y-3">
+                  <p className="text-slate-500 text-[11px] leading-relaxed">
+                    Export the entire language learning deck (including images/audio) to a single JSON backup. You can import this file on another device.
+                  </p>
+
+                  <button onClick={handleExportJson} className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold py-3 px-6 rounded-xl shadow-md flex items-center justify-center gap-1.5 w-full">
+                    <Download className="h-4.5 w-4.5" /> Export Database JSON
+                  </button>
+
+                  <div className="border-t border-slate-200 dark:border-slate-800 pt-4 space-y-2">
+                    <span className="block text-[11px] text-slate-500">Restore/Import Database JSON:</span>
+                    <input type="file" accept=".json" onChange={handleImportJson} className="text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-sky-50 file:text-sky-700 w-full" />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* PDF/Word Extractor */}
-            <div className="bg-slate-50/50 dark:bg-slate-950/20 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800 space-y-4">
-              <h3 className="text-sm font-black text-indigo-950 dark:text-white border-b pb-2 mb-2 flex items-center gap-1.5">
-                <FileText className="h-4.5 w-4.5 text-sky-500" /> Extractor: Parse Word / PDF Documents
-              </h3>
+              {/* Word Extractor (DOCX / PDF / JSON) */}
+              <div className="bg-slate-50/50 dark:bg-slate-950/20 p-5 rounded-2xl border border-slate-200/50 dark:border-slate-800 space-y-4">
+                <h3 className="text-sm font-black text-indigo-950 dark:text-white border-b pb-2 mb-2 flex items-center gap-1.5">
+                  <FileText className="h-4.5 w-4.5 text-sky-500" /> Import Words from File
+                </h3>
 
-              <form onSubmit={handleBulkExtract} className="space-y-3">
-                <p className="text-slate-500 text-[11px] leading-relaxed">
-                  Select a Word (.docx) or PDF (.pdf) file, pick the target language, and clicking Extract will auto-parse the text, extract unique words matching the script range, and save them.
-                </p>
+                <form onSubmit={handleBulkExtract} className="space-y-3">
+                  <p className="text-slate-500 text-[11px] leading-relaxed">
+                    Upload a <strong>.docx</strong>, <strong>.pdf</strong>, or <strong>.json</strong> file with one word per line.
+                    Words will be extracted, deduplicated, and saved to the selected language.
+                  </p>
 
-                <div className="flex flex-col gap-1">
-                  <span className="text-slate-400">Target Language</span>
-                  <select value={bulkLang} onChange={(e) => setBulkLang(e.target.value)} className="rounded-xl border p-2 bg-white dark:bg-slate-800">
-                    <option value="">Select Language</option>
-                    {languages.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
-                  </select>
-                </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-slate-400">Target Language</span>
+                    <select value={bulkLang} onChange={(e) => setBulkLang(e.target.value)} className="rounded-xl border p-2 bg-white dark:bg-slate-800">
+                      <option value="">Select Language</option>
+                      {languages.map(l => <option key={l.id} value={l.id}>{l.name}</option>)}
+                    </select>
+                  </div>
 
-                <div className="flex flex-col gap-1">
-                  <span className="text-slate-400">DOCX or PDF File</span>
-                  <input type="file" accept=".docx,.pdf" onChange={(e) => setBulkFile(e.target.files?.[0] || null)} className="text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-sky-50 file:text-sky-700 w-full" />
-                </div>
+                  {/* Import Mode */}
+                  <div className="flex flex-col gap-1">
+                    <span className="text-slate-400">Import Mode</span>
+                    <div className="flex rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                      {(['merge', 'replace'] as const).map(mode => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => setBulkImportMode(mode)}
+                          className={`flex-1 py-2 font-bold text-center text-xs transition-all ${bulkImportMode === mode ? 'bg-indigo-600 text-white' : 'bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50'}`}
+                        >
+                          {mode === 'merge' ? '➕ Merge (Add to existing)' : '🔄 Replace (Clear & reimport)'}
+                        </button>
+                      ))}
+                    </div>
+                    {bulkImportMode === 'replace' && (
+                      <div className="flex items-center gap-1.5 text-amber-600 text-[10px] bg-amber-50 dark:bg-amber-950/20 rounded-lg p-2 mt-1">
+                        <AlertCircle className="h-3.5 w-3.5 flex-shrink-0" />
+                        Replace mode will delete ALL existing words for the selected language before importing.
+                      </div>
+                    )}
+                  </div>
 
-                <button 
-                  type="submit" 
-                  disabled={bulkParsing || !bulkFile || !bulkLang}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3 px-6 rounded-xl shadow-md flex items-center justify-center gap-1.5 w-full disabled:opacity-50"
-                >
-                  {bulkParsing ? 'Parsing Document...' : 'Extract & Save Words'}
-                </button>
-              </form>
+                  <div className="flex flex-col gap-1">
+                    <span className="text-slate-400">File (.docx / .pdf / .json)</span>
+                    <input
+                      type="file"
+                      accept=".docx,.pdf,.json"
+                      onChange={(e) => setBulkFile(e.target.files?.[0] || null)}
+                      className="text-xs file:mr-2 file:py-1.5 file:px-3 file:rounded-xl file:border-0 file:bg-sky-50 file:text-sky-700 w-full"
+                    />
+                    {bulkFile && (
+                      <span className="text-[10px] text-slate-400 mt-0.5">
+                        Selected: <strong>{bulkFile.name}</strong> ({(bulkFile.size / 1024).toFixed(1)} KB)
+                      </span>
+                    )}
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={bulkParsing || !bulkFile || !bulkLang}
+                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold py-3 px-6 rounded-xl shadow-md flex items-center justify-center gap-1.5 w-full disabled:opacity-50"
+                  >
+                    {bulkParsing ? (
+                      <><RefreshCw className="h-4 w-4 animate-spin" /> Parsing File...</>
+                    ) : (
+                      <><Save className="h-4 w-4" /> Extract &amp; Save Words</>
+                    )}
+                  </button>
+                </form>
+              </div>
             </div>
           </div>
         )}

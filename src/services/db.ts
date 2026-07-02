@@ -1,7 +1,7 @@
 import type { Language, Subject, LearningItem, QuizQuestion } from '../types';
 
 const DB_NAME = 'kids-learning-platform-db';
-const DB_VERSION = 1;
+const DB_VERSION = 2; // Bumped to v2: English & Tamil only, 100 words each
 
 export class AppDb {
   private db: IDBDatabase | null = null;
@@ -22,8 +22,19 @@ export class AppDb {
         resolve(request.result);
       };
 
-      request.onupgradeneeded = () => {
+      request.onupgradeneeded = (event) => {
         const db = request.result;
+        const oldVersion = event.oldVersion;
+
+        // On any version upgrade, we delete and recreate stores to ensure clean state.
+        // This allows the app to re-seed with the new expanded word lists.
+        if (oldVersion < 2) {
+          // Delete old stores if they exist
+          if (db.objectStoreNames.contains('languages')) db.deleteObjectStore('languages');
+          if (db.objectStoreNames.contains('subjects')) db.deleteObjectStore('subjects');
+          if (db.objectStoreNames.contains('learning_items')) db.deleteObjectStore('learning_items');
+          if (db.objectStoreNames.contains('quiz_questions')) db.deleteObjectStore('quiz_questions');
+        }
 
         // Languages Store
         if (!db.objectStoreNames.contains('languages')) {
@@ -230,6 +241,45 @@ export class AppDb {
       const request = store.delete(id);
       request.onsuccess = () => resolve();
       request.onerror = () => reject(request.error);
+    });
+  }
+
+  /** Returns the total count of learning items for a given language (or all if no langId). */
+  async getWordCount(langId?: string): Promise<number> {
+    const store = await this.getStore('learning_items');
+    return new Promise((resolve, reject) => {
+      if (langId) {
+        const index = store.index('language');
+        const request = index.count(IDBKeyRange.only(langId));
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      } else {
+        const request = store.count();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      }
+    });
+  }
+
+  /** Deletes all learning items for a given language (for Replace mode import). */
+  async clearLearningItemsByLanguage(langId: string): Promise<void> {
+    const db = await this.init();
+    return new Promise((resolve, reject) => {
+      const transaction = db.transaction('learning_items', 'readwrite');
+      const store = transaction.objectStore('learning_items');
+      const index = store.index('language');
+      const request = index.openCursor(IDBKeyRange.only(langId));
+
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+
+      request.onsuccess = (event) => {
+        const cursor = (event.target as IDBRequest<IDBCursorWithValue>).result;
+        if (cursor) {
+          cursor.delete();
+          cursor.continue();
+        }
+      };
     });
   }
 }

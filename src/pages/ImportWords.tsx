@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../hooks/useGameStore';
 import { dbService } from '../services/db';
 import { speechService } from '../services/speechService';
-import { parseDocxFile, parsePdfFile } from '../utils/fileParser';
+import { parseDocxFile, parsePdfFile, parseJsonFile } from '../utils/fileParser';
 import { segmentWord } from '../utils/wordSegmenter';
 import type { LearningItem, Difficulty } from '../types';
 import { playClickSound, playSuccessSound, playErrorSound } from '../utils/soundEffects';
@@ -106,13 +106,18 @@ export const ImportWords: React.FC = () => {
     setLoading(true);
 
     try {
+      const ext = file.name.split('.').pop()?.toLowerCase();
       let wordsExtracted: string[] = [];
 
-      // Read files locally using mammoths/pdf-dist
-      if (file.name.endsWith('.docx')) {
-        wordsExtracted = await parseDocxFile(file, activeLanguageId);
-      } else if (file.name.endsWith('.pdf')) {
-        wordsExtracted = await parsePdfFile(file, activeLanguageId);
+      if (ext === 'docx') {
+        const result = await parseDocxFile(file, activeLanguageId);
+        wordsExtracted = result.words;
+      } else if (ext === 'pdf') {
+        const result = await parsePdfFile(file, activeLanguageId);
+        wordsExtracted = result.words;
+      } else if (ext === 'json') {
+        const result = await parseJsonFile(file, activeLanguageId);
+        wordsExtracted = result.words;
       }
 
       if (wordsExtracted.length === 0) {
@@ -124,7 +129,7 @@ export const ImportWords: React.FC = () => {
       const existingDbWords = currentDbItems.map(item => item.word.toUpperCase().trim());
 
       let dupCount = 0;
-      let blankCount = 0; // Handled in extraction, but let's count filters
+      let blankCount = 0;
 
       // Process word extraction list
       const uniqueInputWords = new Set<string>();
@@ -149,7 +154,7 @@ export const ImportWords: React.FC = () => {
       const timestamp = new Date().toISOString();
       const itemsToSave: LearningItem[] = Array.from(uniqueInputWords).map((word, idx) => {
         const letters = segmentWord(word, activeLanguageId);
-        
+
         // Auto difficulty assigner
         let difficulty: Difficulty = 'easy';
         if (letters.length >= 5 && letters.length <= 7) difficulty = 'medium';
@@ -161,7 +166,7 @@ export const ImportWords: React.FC = () => {
           subject: 'words',
           category: 'Imported',
           word,
-          meaning: word.toLowerCase(), // fallback meaning
+          meaning: '',
           difficulty,
           createdAt: timestamp,
           updatedAt: timestamp
@@ -170,7 +175,7 @@ export const ImportWords: React.FC = () => {
 
       // Save to local database (IndexedDB)
       await dbService.bulkSaveLearningItems(itemsToSave);
-      
+
       // Update UI lists
       await loadImportedWords();
       setStats({
@@ -181,10 +186,11 @@ export const ImportWords: React.FC = () => {
 
       playSuccessSound(settings.soundEnabled);
       confetti({ particleCount: 150, spread: 80 });
-      setFile(null); // Reset file
-    } catch (err: any) {
+      setFile(null);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
       playErrorSound(settings.soundEnabled);
-      alert(`Import Error: ${err.message || err}`);
+      alert(`Import Error: ${msg}`);
     } finally {
       setLoading(false);
     }
