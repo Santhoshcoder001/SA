@@ -5,6 +5,7 @@ import { LandingPage } from './pages/LandingPage';
 import { SubjectSelect } from './pages/SubjectSelect';
 import { AdminPanel } from './pages/AdminPanel';
 import { ImportWords } from './pages/ImportWords';
+import { AuthPage } from './pages/AuthPage';
 
 // Activity views
 import { Alphabet } from './pages/activities/Alphabet';
@@ -31,6 +32,9 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Standalone pages (no layout) */}
+        <Route path="/auth" element={<AuthPage />} />
+
         {/* Main interactive kids views inside KidsLayout */}
         <Route element={<KidsLayout />}>
           <Route path="/" element={<LandingPage />} />

@@ -1,31 +1,82 @@
 import React, { useEffect, useState } from 'react';
 import { Outlet, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useGameStore } from '../hooks/useGameStore';
-import { Trophy, Award, Moon, Sun, ArrowLeft, Settings, ShieldAlert, Brain } from 'lucide-react';
+import { useAuth } from '../hooks/useAuth';
+import { Trophy, Award, Moon, Sun, ArrowLeft, Settings, ShieldAlert, Brain, LogIn } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { UserAvatar } from '../components/UserAvatar';
+import { CloudSyncBanner } from '../components/CloudSyncBanner';
+import { pullUserData, mergeProgress } from '../services/cloudSyncService';
 
 export const KidsLayout: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { 
-    progress, 
-    settings, 
-    updateSettings, 
+  const {
+    progress,
+    settings,
+    achievements,
+    updateSettings,
     initializeSystem,
     isLoading,
     error,
     languages,
     activeLanguageId,
     selectLanguage,
-    selectSubject
+    selectSubject,
+    setUser,
+    setCloudData,
+    userId,
   } = useGameStore();
 
+  const auth = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [syncBannerData, setSyncBannerData] = useState<{
+    cloudProgress: typeof progress;
+    cloudAchievements: typeof achievements;
+  } | null>(null);
 
   // Initialize DB and load languages on mount
   useEffect(() => {
     initializeSystem();
   }, [initializeSystem]);
+
+  // Wire auth state → game store userId
+  useEffect(() => {
+    const uid = auth.user?.uid ?? null;
+    if (uid === userId) return; // no change
+
+    if (uid) {
+      // User just signed in — pull cloud data
+      setUser(uid);
+      pullUserData(uid).then((data) => {
+        if (data.progress) {
+          const cloudIsBetter =
+            data.progress.stars > progress.stars ||
+            data.progress.coins > progress.coins ||
+            data.progress.level > progress.level;
+
+          if (cloudIsBetter || progress.completedItemIds.length === 0) {
+            // Auto-merge (silent)
+            setUser(uid, {
+              progress: data.progress,
+              settings: data.settings ?? settings,
+              achievements: data.achievements ?? achievements,
+              updatedAt: data.updatedAt ?? new Date().toISOString(),
+            });
+          } else {
+            // Local has more — show conflict banner
+            setSyncBannerData({
+              cloudProgress: data.progress,
+              cloudAchievements: data.achievements ?? achievements,
+            });
+          }
+        }
+      }).catch(console.error);
+    } else {
+      setUser(null);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth.user?.uid]);
 
   const toggleTheme = () => {
     const currentTheme = settings.theme;
@@ -148,8 +199,20 @@ export const KidsLayout: React.FC = () => {
             )}
           </div>
 
-          {/* Quick Settings Action */}
+          {/* Auth + Quick Settings */}
           <div className="flex items-center gap-1 sm:gap-2">
+            {/* User avatar (signed in) or Sign-In button (guest) */}
+            {auth.isSignedIn ? (
+              <UserAvatar />
+            ) : auth.isConfigured ? (
+              <Link
+                to="/auth"
+                className="hidden sm:flex items-center gap-1.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold px-3 py-2 text-xs transition-all shadow-md active:scale-95"
+              >
+                <LogIn className="h-3.5 w-3.5" />
+                Sign In
+              </Link>
+            ) : null}
             <button
               onClick={toggleTheme}
               className="rounded-2xl p-2.5 text-slate-500 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition-colors shadow-sm bg-white dark:bg-slate-900 border-2 border-slate-200/50 dark:border-slate-800"
@@ -177,6 +240,7 @@ export const KidsLayout: React.FC = () => {
               Admin Panel
             </Link>
           </div>
+
         </div>
 
         {/* XP Progress Bar below navbar */}
@@ -200,6 +264,26 @@ export const KidsLayout: React.FC = () => {
       <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-6 md:py-8">
         <Outlet />
       </main>
+
+      {/* Cloud Sync Conflict Banner */}
+      {syncBannerData && (
+        <CloudSyncBanner
+          localProgress={progress}
+          cloudProgress={syncBannerData.cloudProgress}
+          onKeepCloud={() => {
+            const merged = mergeProgress(progress, syncBannerData.cloudProgress);
+            setCloudData({
+              progress: merged,
+              settings,
+              achievements: syncBannerData.cloudAchievements,
+              updatedAt: new Date().toISOString(),
+            });
+            setSyncBannerData(null);
+          }}
+          onUseLocal={() => setSyncBannerData(null)}
+          onDismiss={() => setSyncBannerData(null)}
+        />
+      )}
 
       {/* Settings Modal Drawer */}
       <AnimatePresence>

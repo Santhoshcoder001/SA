@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { Language, Subject, UserProgress, Settings, Achievement, QuizHistory } from '../types';
 import { dbService } from '../services/db';
+import { pushProgress, mergeProgress, type CloudPayload } from '../services/cloudSyncService';
 
 interface GameStoreState {
   languages: Language[];
@@ -14,9 +15,12 @@ interface GameStoreState {
   isLoading: boolean;
   error: string | null;
 
+  /** UID of the signed-in user — null when guest */
+  userId: string | null;
+
   // Initialization
   initializeSystem: () => Promise<void>;
-  
+
   // Selections
   selectLanguage: (langId: string | null) => void;
   selectSubject: (subId: string | null) => void;
@@ -35,6 +39,12 @@ interface GameStoreState {
   recordQuizResult: (quizHistoryEntry: Omit<QuizHistory, 'id' | 'date'>) => void;
   resetProgress: () => void;
   checkAchievements: () => void;
+
+  /** Called by useAuth when the user signs in — pulls + merges cloud data */
+  setUser: (uid: string | null, cloudData?: CloudPayload | null) => void;
+
+  /** Directly overwrite store with merged cloud data (used after conflict resolution) */
+  setCloudData: (payload: CloudPayload) => void;
 }
 
 const INITIAL_ACHIEVEMENTS: Achievement[] = [
@@ -84,6 +94,33 @@ export const useGameStore = create<GameStoreState>()(
       achievements: INITIAL_ACHIEVEMENTS,
       isLoading: false,
       error: null,
+      userId: null,
+
+      setUser: (uid, cloudData) => {
+        if (!uid) {
+          set({ userId: null });
+          return;
+        }
+        set({ userId: uid });
+        if (cloudData) {
+          const local = get().progress;
+          const merged = mergeProgress(local, cloudData.progress);
+          set({
+            progress: merged,
+            settings: { ...get().settings, ...cloudData.settings },
+            achievements: cloudData.achievements ?? get().achievements,
+          });
+        }
+      },
+
+      setCloudData: (payload) => {
+        set({
+          progress: payload.progress,
+          settings: { ...get().settings, ...payload.settings },
+          achievements: payload.achievements ?? get().achievements,
+        });
+      },
+
 
       initializeSystem: async () => {
         set({ isLoading: true, error: null });
@@ -227,12 +264,18 @@ export const useGameStore = create<GameStoreState>()(
       addCoins: (amount) => set((state) => {
         const newCoins = state.progress.coins + amount;
         setTimeout(() => get().checkAchievements(), 100);
-        return { progress: { ...state.progress, coins: newCoins } };
+        const nextProgress = { ...state.progress, coins: newCoins };
+        const uid = get().userId;
+        if (uid) pushProgress(uid, { progress: nextProgress, settings: get().settings, achievements: get().achievements, updatedAt: new Date().toISOString() });
+        return { progress: nextProgress };
       }),
 
-      addStars: (amount) => set((state) => ({
-        progress: { ...state.progress, stars: state.progress.stars + amount }
-      })),
+      addStars: (amount) => set((state) => {
+        const nextProgress = { ...state.progress, stars: state.progress.stars + amount };
+        const uid = get().userId;
+        if (uid) pushProgress(uid, { progress: nextProgress, settings: get().settings, achievements: get().achievements, updatedAt: new Date().toISOString() });
+        return { progress: nextProgress };
+      }),
 
       addXp: (amount) => set((state) => {
         const newXp = state.progress.xp + amount;
@@ -381,7 +424,8 @@ export const useGameStore = create<GameStoreState>()(
         settings: state.settings,
         achievements: state.achievements,
         activeLanguageId: state.activeLanguageId,
-        activeSubjectId: state.activeSubjectId
+        activeSubjectId: state.activeSubjectId,
+        userId: state.userId,
       })
     }
   )

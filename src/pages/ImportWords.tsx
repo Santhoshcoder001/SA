@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGameStore } from '../hooks/useGameStore';
 import { dbService } from '../services/db';
 import { speechService } from '../services/speechService';
-import { parseDocxFile, parsePdfFile, parseJsonFile } from '../utils/fileParser';
+import { parseDocxFile, parsePdfFile, parseJsonFile, type PdfExtractionMode } from '../utils/fileParser';
 import { segmentWord } from '../utils/wordSegmenter';
 import type { LearningItem, Difficulty } from '../types';
 import { playClickSound, playSuccessSound, playErrorSound } from '../utils/soundEffects';
@@ -37,6 +37,10 @@ export const ImportWords: React.FC = () => {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editValue, setEditValue] = useState('');
+  /** PDF extraction mode: 'filtered' (language-aware) or 'raw' (generic all-text) */
+  const [pdfMode, setPdfMode] = useState<PdfExtractionMode>('filtered');
+  /** Raw preview lines from last extraction (shown before committing) */
+  const [rawPreview, setRawPreview] = useState<string[]>([]);
 
   // Load previously imported words for the current language on mount
   const loadImportedWords = useCallback(async () => {
@@ -86,11 +90,12 @@ export const ImportWords: React.FC = () => {
 
   const validateAndSetFile = (targetFile: File) => {
     const extension = targetFile.name.split('.').pop()?.toLowerCase();
-    if (extension === 'docx' || extension === 'pdf') {
+    if (extension === 'docx' || extension === 'pdf' || extension === 'json') {
       setFile(targetFile);
+      setRawPreview([]);
     } else {
       playErrorSound(settings.soundEnabled);
-      alert('Only .docx (and .pdf) file formats are supported!');
+      alert('Supported formats: .docx  .pdf  .json');
     }
   };
 
@@ -112,12 +117,15 @@ export const ImportWords: React.FC = () => {
       if (ext === 'docx') {
         const result = await parseDocxFile(file, activeLanguageId);
         wordsExtracted = result.words;
+        setRawPreview(result.rawPreview);
       } else if (ext === 'pdf') {
-        const result = await parsePdfFile(file, activeLanguageId);
+        const result = await parsePdfFile(file, activeLanguageId, pdfMode);
         wordsExtracted = result.words;
+        setRawPreview(result.rawPreview);
       } else if (ext === 'json') {
         const result = await parseJsonFile(file, activeLanguageId);
         wordsExtracted = result.words;
+        setRawPreview(result.rawPreview);
       }
 
       if (wordsExtracted.length === 0) {
@@ -318,7 +326,7 @@ export const ImportWords: React.FC = () => {
               <input
                 type="file"
                 id="file-browse"
-                accept=".docx,.pdf"
+                accept=".docx,.pdf,.json"
                 className="hidden"
                 onChange={handleFileBrowse}
               />
@@ -348,6 +356,54 @@ export const ImportWords: React.FC = () => {
                 >
                   <X className="h-4 w-4" />
                 </button>
+              </div>
+            )}
+
+            {/* PDF mode toggle — only shown when a PDF is selected */}
+            {file && file.name.toLowerCase().endsWith('.pdf') && (
+              <div className="space-y-2">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-wider">PDF Extraction Mode</p>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => setPdfMode('filtered')}
+                    className={`flex-1 rounded-xl px-3 py-2 text-xs font-bold border-2 transition-all ${
+                      pdfMode === 'filtered'
+                        ? 'border-sky-500 bg-sky-50 text-sky-700 dark:bg-sky-950/30 dark:text-sky-400'
+                        : 'border-slate-200 dark:border-slate-800 text-slate-500 hover:border-sky-300'
+                    }`}
+                  >
+                    🔤 Language Filter
+                    <span className="block text-[9px] font-semibold opacity-60 mt-0.5">Tamil / English only</span>
+                  </button>
+                  <button
+                    onClick={() => setPdfMode('raw')}
+                    className={`flex-1 rounded-xl px-3 py-2 text-xs font-bold border-2 transition-all ${
+                      pdfMode === 'raw'
+                        ? 'border-purple-500 bg-purple-50 text-purple-700 dark:bg-purple-950/30 dark:text-purple-400'
+                        : 'border-slate-200 dark:border-slate-800 text-slate-500 hover:border-purple-300'
+                    }`}
+                  >
+                    📄 Generic Text
+                    <span className="block text-[9px] font-semibold opacity-60 mt-0.5">All readable lines</span>
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Raw preview pane — shows first 20 extracted lines after parsing */}
+            {rawPreview.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Extraction Preview (first {rawPreview.length} lines)</p>
+                <div className="bg-slate-50 dark:bg-slate-950/40 rounded-2xl border border-slate-200 dark:border-slate-800 p-3 max-h-48 overflow-y-auto">
+                  <ol className="space-y-0.5 text-xs font-mono">
+                    {rawPreview.map((line, i) => (
+                      <li key={i} className="flex gap-2">
+                        <span className="text-slate-300 dark:text-slate-600 w-4 shrink-0">{i + 1}</span>
+                        <span className="text-slate-700 dark:text-slate-300 truncate">{line}</span>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
               </div>
             )}
 
